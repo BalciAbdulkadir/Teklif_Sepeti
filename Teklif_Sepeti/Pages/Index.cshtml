@@ -1,0 +1,44 @@
+﻿@page
+@model Teklif_Sepeti.Pages.IndexModel
+@{
+    ViewData["Title"] = "Ana Sayfa - Kayıtlı Teklifler";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="display-4">Kayıtlı Teklifler</h1>
+    <a asp-page="/CreateProposal" class="btn btn-primary btn-lg">+ Yeni Teklif Oluştur</a>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Teklif Numarası</th>
+                    <th>Müşteri Adı</th>
+                    <th>Düzenlenme Tarihi</th>
+                    <th>Genel Toplam</th>
+                    <th>Durum</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var proposal in Model.Proposals)
+                {
+                    <tr>
+                        <td>@proposal.ProposalNumber</td>
+                        <td>@proposal.CustomerName</td>
+                        <td>@proposal.IssueDate.ToShortDateString()</td>
+                        <td>@proposal.TotalGrandTotal.ToString("C", new System.Globalization.CultureInfo("tr-TR"))</td>
+                        <td>@proposal.Status</td>
+                        <td>
+                            <a asp-page="/ProposalDetails" asp-route-id="@proposal.Id" class="btn btn-sm btn-outline-primary">
+                                Detaylar
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

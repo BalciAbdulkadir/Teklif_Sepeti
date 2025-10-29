@@ -1,0 +1,40 @@
+# C# / .NET Core / Visual Studio
+
+## Build Folders
+[Bb]in/
+[Oo]bj/
+
+## Visual Studio / IDE specific files
+.vs/
+*.suo
+*.user
+*.sln.docstates
+*.userprefs
+
+## User Secrets
+secrets.json
+appsettings.Development.json
+
+## Environment Files
+.env
+
+## Databases (Eğer veritabanını paylaşmak istemiyorsan)
+*.db
+*.db-shm
+*.db-wal
+
+## Nuget Packages
+packages/
+*.nupkg
+# Exclude files shipped with Visual Studio or the .NET SDK
+tools/
+
+## OS generated files
+*.[Ll]ock
+*.DS_Store
+Thumbs.db
+
+## Test results
+*.trx
+*.kcov
+coverlet.*.xml

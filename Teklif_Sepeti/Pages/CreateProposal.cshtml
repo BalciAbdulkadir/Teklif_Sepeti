@@ -1,0 +1,168 @@
+﻿@page
+@model Teklif_Sepeti.Pages.CreateProposalModel
+@{
+    ViewData["Title"] = "Yeni Teklif Oluştur";
+}
+
+<div class="container mt-4">
+    <form method="post" id="proposalForm">
+        <div asp-validation-summary="All" class="alert alert-danger"></div>
+        <div class="row g-4">
+            <div class="col-md-8">
+                <h1 class="mb-4">Yeni Fiyat Teklifi</h1>
+
+                <div class="card mb-4">
+                    <div class="card-header fw-bold">Müşteri Bilgileri</div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Müşteri Adı / Unvanı</label>
+                                <input asp-for="Proposal.CustomerName" class="form-control" placeholder="Örn: ABC İnşaat Ltd. Şti." />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Müşteri E-postası</label>
+                                <input asp-for="Proposal.CustomerEmail" type="email" class="form-control" placeholder="opsiyonel@eposta.com" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Geçerlilik Bitiş Tarihi</label>
+                                <input asp-for="Proposal.ExpiryDate" type="date" class="form-control" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Müşteri Adresi</label>
+                                <textarea asp-for="Proposal.CustomerAddress" class="form-control" rows="1"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header fw-bold">Teklif Kalemleri</div>
+                    <div class="card-body">
+                        <table class="table table-hover" id="itemsTable">
+                            <thead>
+                                <tr>
+                                    <th style="width: 45%;">Açıklama</th>
+                                    <th>Miktar</th>
+                                    <th>Birim Fiyat</th>
+                                    <th>KDV (%)</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                        <button type="button" id="addRow" class="btn btn-primary mt-2">+ Yeni Satır Ekle</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header fw-bold">Notlar ve Ek Bilgiler</div>
+                    <div class="card-body">
+                        <textarea asp-for="Proposal.Notes" class="form-control" rows="4" placeholder="Banka bilgileri, teslimat şartları vb."></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="sticky-top" style="top: 20px;">
+                    <div class="card">
+                        <div class="card-header fw-bold h5">Teklif Özeti</div>
+                        <div class="card-body">
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Ara Toplam
+                                    <span id="subtotal" class="badge bg-secondary rounded-pill fs-6">0,00 ₺</span>
+                                </li>
+                                ...
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Net Toplam
+                                    <span id="netTotal" class="badge bg-secondary rounded-pill fs-6">0,00 ₺</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Toplam KDV
+                                    <span id="vatTotal" class="badge bg-secondary rounded-pill fs-6">0,00 ₺</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center fw-bold h5">
+                                    GENEL TOPLAM
+                                    <span id="grandTotal" class="badge bg-success rounded-pill fs-5">0,00 ₺</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="d-grid gap-2 mt-3">
+                        <button type="submit" class="btn btn-success btn-lg">Teklifi Kaydet</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+
+@section Scripts {
+    <script>
+        let itemIndex = 0;
+        const tableBody = document.querySelector("#itemsTable tbody");
+
+        // ANA HESAPLAMA FONKSİYONU
+        function updateTotals() {
+            let subtotal = 0;
+            let vatTotal = 0;
+
+            const rows = tableBody.querySelectorAll("tr");
+            rows.forEach(row => {
+                const quantityInput = row.querySelector('input[name*="Quantity"]');
+                const unitPriceInput = row.querySelector('input[name*="UnitPrice"]');
+                const vatRateInput = row.querySelector('input[name*="VATRate"]');
+
+                const quantity = parseFloat(quantityInput.value) || 0;
+                const unitPrice = parseFloat(unitPriceInput.value) || 0;
+                const vatRate = parseFloat(vatRateInput.value) || 0;
+
+                const rowSubtotal = quantity * unitPrice;
+                const rowVat = rowSubtotal * (vatRate / 100);
+
+                subtotal += rowSubtotal;
+                vatTotal += rowVat;
+            });
+
+            const grandTotal = subtotal + vatTotal;
+
+            // Hesaplanan değerleri sağdaki özet paneline yazdır
+            document.getElementById("subtotal").textContent = subtotal.toFixed(2) + ' ₺';
+            document.getElementById("vatTotal").textContent = vatTotal.toFixed(2) + ' ₺';
+            document.getElementById("grandTotal").textContent = grandTotal.toFixed(2) + ' ₺';
+
+            // TODO: İskonto ve Net Toplam hesaplaması daha sonra eklenecek
+            document.getElementById("netTotal").textContent = subtotal.toFixed(2) + ' ₺';
+        }
+
+        // YENİ SATIR EKLEME FONKSİYONU
+        document.getElementById("addRow").addEventListener("click", function () {
+            const newRow = tableBody.insertRow();
+            newRow.innerHTML = `
+                <td><input name="Proposal.Items[${itemIndex}].Name" class="form-control" required /></td>
+                <td><input name="Proposal.Items[${itemIndex}].Quantity" type="number" value="1" class="form-control item-calc" required /></td>
+                <td><input name="Proposal.Items[${itemIndex}].UnitPrice" type="number" step="0.01" value="0.00" class="form-control item-calc" required /></td>
+                <td><input name="Proposal.Items[${itemIndex}].VATRate" type="number" value="20" class="form-control item-calc" required /></td>
+                <td><button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)">Sil</button></td>
+            `;
+            itemIndex++;
+        });
+
+        // SATIR SİLME FONKSİYONU
+        function removeRow(button) {
+            button.closest('tr').remove();
+            updateTotals(); // Satır silindikten sonra toplamları yeniden hesapla
+        }
+
+        // HESAPLAMAYI TETİKLEME
+        // Tablonun tamamına bir "event listener" ekliyoruz.
+        // Bu sayede, içindeki herhangi bir input değiştiğinde (yazı yazıldığında, değer değiştiğinde)
+        // "updateTotals" fonksiyonumuz otomatik olarak çalışacak.
+        tableBody.addEventListener('input', function(event) {
+            if (event.target.classList.contains('item-calc')) {
+                updateTotals();
+            }
+        });
+
+    </script>
+}
