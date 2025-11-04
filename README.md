@@ -40,11 +40,9 @@ Proje şu anda yukarıda listelenen MVP özelliklerini içeren, çalışır duru
 
 ## 🚀 Gelecek Planları (Yeni Dallar ile Eklenecekler)
 
-* Kullanıcı Profili ve Şirket Bilgileri Yönetimi (PDF'e otomatik ekleme için).
+* Kullanıcı Profili ve Şirket Bilgileri Yönetimi (PDF'e otomatik ekleme için). ✅
 * Gelişmiş İskonto Uygulama Mantığı.
 * Teklifleri Düzenleme ve Silme Fonksiyonları.
-* PDF Şablonunu Özelleştirme Seçenekleri (Logo vb.).
-* "Kayıtlı Kalemler" özelliği ile hızlı ürün/hizmet seçimi.
 * Müşteri Adresi için İl/İlçe seçimi gibi arayüz iyileştirmeleri.
 
 ## 🛠️ Kurulum ve Çalıştırma (Geliştirme Ortamı)
