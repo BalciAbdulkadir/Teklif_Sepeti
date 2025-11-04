@@ -1,10 +1,19 @@
-﻿namespace Teklif_Sepeti.Models
+﻿using System.ComponentModel.DataAnnotations; 
+
+namespace Teklif_Sepeti.Models
 {
     public enum ProposalStatus
     {
-        Draft,      // Taslak (Üzerinde çalışılıyor)
-        Sent,       // Gönderildi (Müşteri bekliyor)
-        Accepted,   // Kabul Edildi (Artık faturalanabilir)
-        Rejected    // Reddedildi
+        [Display(Name = "Taslak")] 
+        Draft,
+
+        [Display(Name = "Gönderildi")] 
+        Sent,
+
+        [Display(Name = "Kabul Edildi")] 
+        Accepted,
+
+        [Display(Name = "Reddedildi")] 
+        Rejected
     }
 }

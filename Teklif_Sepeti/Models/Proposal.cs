@@ -6,47 +6,40 @@ namespace Teklif_Sepeti.Models
     {
         public int Id { get; set; }
 
-        // --- MÜŞTERİ VE TEKLİF BİLGİLERİ ---
-
         [Display(Name = "Teklif Numarası")]
-        public string? ProposalNumber { get; set; } // ARTIK BOŞ OLABİLİR
+        public string? ProposalNumber { get; set; }
 
-        [Required(ErrorMessage = "Müşteri Adı alanı zorunludur.")] // Hata mesajı eklemek iyidir
+        [Required(ErrorMessage = "Müşteri adı zorunludur")]
         [Display(Name = "Müşteri Adı/Şirketi")]
         public string CustomerName { get; set; }
 
-        [Display(Name = "Müşteri E-Postası")]
-        [EmailAddress]
-        public string? CustomerEmail { get; set; } // ARTIK BOŞ OLABİLİR
+        [EmailAddress(ErrorMessage = "Geçerli bir e-posta adresi giriniz")]
+        [Display(Name = "Müşteri E-postası")]
+        public string? CustomerEmail { get; set; }
 
-        // Müşteri Adresini de ekleyelim, çünkü formda var.
         [Display(Name = "Müşteri Adresi")]
-        public string? CustomerAddress { get; set; } // ARTIK BOŞ OLABİLİR
+        public string? CustomerAddress { get; set; }
 
         [Display(Name = "Düzenlenme Tarihi")]
         [DataType(DataType.Date)]
         public DateTime IssueDate { get; set; }
 
-        [Display(Name = "Geçerlilik Bitiş Tarihi")]
+        [Display(Name = "Geçerlilik Tarihi")]
         [DataType(DataType.Date)]
         public DateTime ExpiryDate { get; set; }
 
-        // --- DURUM VE NOTLAR ---
-
+        // Teklifin durumu
         public ProposalStatus Status { get; set; } = ProposalStatus.Draft;
 
-        [Display(Name = "Ek Notlar")]
-        public string? Notes { get; set; } // ARTIK BOŞ OLABİLİR
+        [Display(Name = "Notlar")]
+        public string? Notes { get; set; }
 
-        // --- HESAPLANMIŞ TOPLAMLAR ---
-        // Bunları formdan beklemiyoruz, arka planda hesaplayacağız
+        // Hesaplanan toplamlar
         public decimal TotalSubtotal { get; set; }
         public decimal TotalVATAmount { get; set; }
         public decimal TotalGrandTotal { get; set; }
 
-        // Bu önemli: İlişkiyi boş bir liste ile başlatmak, null hatalarını önler.
+        // Teklif kalemleri koleksiyonu
         public ICollection<ProductService> Items { get; set; } = new List<ProductService>();
     }
-
-    
 }

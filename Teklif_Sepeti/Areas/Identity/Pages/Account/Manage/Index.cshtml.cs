@@ -1,66 +1,66 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
-#nullable disable
-
-using System;
+﻿using System;
 using System.ComponentModel.DataAnnotations;
-using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Teklif_Sepeti.Models; 
+
 
 namespace Teklif_Sepeti.Areas.Identity.Pages.Account.Manage
 {
     public class IndexModel : PageModel
     {
-        private readonly UserManager<IdentityUser> _userManager;
-        private readonly SignInManager<IdentityUser> _signInManager;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly SignInManager<ApplicationUser> _signInManager;
 
         public IndexModel(
-            UserManager<IdentityUser> userManager,
-            SignInManager<IdentityUser> signInManager)
+            UserManager<ApplicationUser> userManager,
+            SignInManager<ApplicationUser> signInManager)
         {
             _userManager = userManager;
             _signInManager = signInManager;
         }
 
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
         public string Username { get; set; }
 
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
         [TempData]
         public string StatusMessage { get; set; }
 
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
         [BindProperty]
         public InputModel Input { get; set; }
 
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
+        
         public class InputModel
         {
-            /// <summary>
-            ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-            ///     directly from your code. This API may change or be removed in future releases.
-            /// </summary>
             [Phone]
-            [Display(Name = "Phone number")]
+            [Display(Name = "Telefon Numarası")]
             public string PhoneNumber { get; set; }
+
+            [Display(Name = "Şirket Unvanı")]
+            public string CompanyName { get; set; }
+
+            [Display(Name = "Şirket Adresi")]
+            public string CompanyAddress { get; set; }
+
+            [Display(Name = "Vergi Dairesi")]
+            public string CompanyTaxOffice { get; set; }
+
+            [Display(Name = "Vergi Numarası")]
+            public string CompanyTaxNumber { get; set; }
+
+            [Display(Name = "IBAN")]
+            public string CompanyIBAN { get; set; }
+
+            [Display(Name = "Yetkili Adı Soyadı")]
+            public string ContactFullName { get; set; }
+
+            [Display(Name = "Yetkili Unvanı")]
+            public string ContactTitle { get; set; }
         }
 
-        private async Task LoadAsync(IdentityUser user)
+        // Sayfa yüklenirken veritabanındaki bilgileri forma doldurur
+        private async Task LoadAsync(ApplicationUser user)
         {
             var userName = await _userManager.GetUserNameAsync(user);
             var phoneNumber = await _userManager.GetPhoneNumberAsync(user);
@@ -69,7 +69,16 @@ namespace Teklif_Sepeti.Areas.Identity.Pages.Account.Manage
 
             Input = new InputModel
             {
-                PhoneNumber = phoneNumber
+                PhoneNumber = phoneNumber,
+                
+                // Veritabanından (user nesnesinden) verileri çekip forma dolduruyoruz
+                CompanyName = user.CompanyName,
+                CompanyAddress = user.CompanyAddress,
+                CompanyTaxOffice = user.CompanyTaxOffice,
+                CompanyTaxNumber = user.CompanyTaxNumber,
+                CompanyIBAN = user.CompanyIBAN,
+                ContactFullName = user.ContactFullName,
+                ContactTitle = user.ContactTitle
             };
         }
 
@@ -85,6 +94,7 @@ namespace Teklif_Sepeti.Areas.Identity.Pages.Account.Manage
             return Page();
         }
 
+        
         public async Task<IActionResult> OnPostAsync()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -105,13 +115,66 @@ namespace Teklif_Sepeti.Areas.Identity.Pages.Account.Manage
                 var setPhoneResult = await _userManager.SetPhoneNumberAsync(user, Input.PhoneNumber);
                 if (!setPhoneResult.Succeeded)
                 {
-                    StatusMessage = "Unexpected error when trying to set phone number.";
+                    StatusMessage = "Telefon numarası ayarlanırken beklenmedik hata.";
                     return RedirectToPage();
                 }
             }
 
+            
+            // Formdan (Input) gelen verileri alıp 'user' nesnesine işliyoruz
+            bool dataChanged = false;
+
+            if (Input.CompanyName != user.CompanyName)
+            {
+                user.CompanyName = Input.CompanyName;
+                dataChanged = true;
+            }
+            if (Input.CompanyAddress != user.CompanyAddress)
+            {
+                user.CompanyAddress = Input.CompanyAddress;
+                dataChanged = true;
+            }
+            if (Input.CompanyTaxOffice != user.CompanyTaxOffice)
+            {
+                user.CompanyTaxOffice = Input.CompanyTaxOffice;
+                dataChanged = true;
+            }
+            if (Input.CompanyTaxNumber != user.CompanyTaxNumber)
+            {
+                user.CompanyTaxNumber = Input.CompanyTaxNumber;
+                dataChanged = true;
+            }
+            if (Input.CompanyIBAN != user.CompanyIBAN)
+            {
+                user.CompanyIBAN = Input.CompanyIBAN;
+                dataChanged = true;
+            }
+            if (Input.ContactFullName != user.ContactFullName)
+            {
+                user.ContactFullName = Input.ContactFullName;
+                dataChanged = true;
+            }
+            if (Input.ContactTitle != user.ContactTitle)
+            {
+                user.ContactTitle = Input.ContactTitle;
+                dataChanged = true;
+            }
+
+            // Sadece değişiklik varsa veritabanını güncelle
+            if (dataChanged)
+            {
+                var updateResult = await _userManager.UpdateAsync(user);
+                if (!updateResult.Succeeded)
+                {
+                    StatusMessage = "Profil güncellenirken beklenmedik hata.";
+                    return RedirectToPage();
+                }
+            }
+
+          
+
             await _signInManager.RefreshSignInAsync(user);
-            StatusMessage = "Your profile has been updated";
+            StatusMessage = "Profiliniz güncellendi";
             return RedirectToPage();
         }
     }

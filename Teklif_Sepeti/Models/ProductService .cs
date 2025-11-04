@@ -1,31 +1,42 @@
-﻿using System.ComponentModel.DataAnnotations; // Bunu ekle
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace Teklif_Sepeti.Models
 {
     public class ProductService
     {
-        public int Id { get; set; }
+    public int Id { get; set; }
 
-        [Required(ErrorMessage = "Satır açıklaması boş bırakılamaz.")] // Kuralı netleştir
-        public string Name { get; set; }
+   [Required(ErrorMessage = "Kalem açıklaması zorunludur")]
+   public string Name { get; set; }
 
+        [Range(1, int.MaxValue, ErrorMessage = "Miktar en az 1 olmalıdır")]
         public int Quantity { get; set; }
+
+        [Range(0.01, double.MaxValue, ErrorMessage = "Geçerli bir birim fiyat giriniz")]
         public decimal UnitPrice { get; set; }
+
+        [Range(0, 100, ErrorMessage = "KDV oranı 0-100 arasında olmalıdır")]
         public decimal VATRate { get; set; }
 
-        // --- HESAPLANMIŞ ALANLAR ---
-        public decimal CalculatedSubtotal { get; set; }
-        public decimal CalculatedVAT { get; set; }
-        public decimal CalculatedTotal { get; set; }
+        public decimal CalculatedSubtotal
+        {
+  get { return Quantity * UnitPrice; }
+            set { }
+    }
 
+        public decimal CalculatedVAT
+        {
+       get { return CalculatedSubtotal * (VATRate / 100m); }
+    set { }
+        }
 
-        public int ProposalId { get; set; }
+        public decimal CalculatedTotal
+        {
+       get { return CalculatedSubtotal + CalculatedVAT; }
+  set { }
+        }
 
-        // --- MAYINI TEMİZLEDİK ---
-        // Bu, bir "navigation property"dir. Model bağlayıcının
-        // bunu formdan beklemesine gerek yok. "Null olabilir" (? işareti) 
-        // diyerek fedainin çenesini kapatıyoruz.
-        // Entity Framework (veritabanı) bunu ProposalId üzerinden kendi halledecek.
-        public Proposal? Proposal { get; set; }
+      public int ProposalId { get; set; }
+      public Proposal? Proposal { get; set; }
     }
 }

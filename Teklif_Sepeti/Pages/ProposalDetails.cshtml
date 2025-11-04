@@ -15,14 +15,12 @@
                             Aşağıdaki teklif detaylarını inceleyebilir ve PDF olarak indirebilirsiniz.
                         </p>
                         <div class="d-grid gap-2">
-                            <form method="post">
-                                <button type="submit" class="btn btn-success btn-lg w-100"
-                                        asp-page-handler="DownloadPdf"
-                                        asp-route-id="@Model.Proposal.Id">
-                                    <svg ...>...</svg> PDF İndir
+                            <form method="post" asp-page-handler="DownloadPdfAsync" asp-route-id="@Model.Proposal.Id" class="d-inline-block">
+                                <button type="submit" class="btn btn-outline-primary">
+                                    <i class="bi bi-file-earmark-pdf"></i> PDF İndir
                                 </button>
                             </form>
-                            <a asp-page="/Index" class="btn btn-outline-secondary">
+                            <a asp-page="/Index" class="btn btn-outline-primary">
                                 &larr; Listeye Geri Dön
                             </a>
                         </div>

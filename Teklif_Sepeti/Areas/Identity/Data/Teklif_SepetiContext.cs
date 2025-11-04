@@ -1,10 +1,11 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Teklif_Sepeti.Models;
 
 namespace Teklif_Sepeti.Data;
 
-public class Teklif_SepetiContext : IdentityDbContext<IdentityUser>
+public class Teklif_SepetiContext : IdentityDbContext<ApplicationUser>
 {
     public Teklif_SepetiContext(DbContextOptions<Teklif_SepetiContext> options)
         : base(options)

@@ -1,72 +1,79 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore; // Include ve veritabaný iþlemleri için gerekli
-using QuestPDF.Fluent; // PDF üretimi için QuestPDF
+using Microsoft.EntityFrameworkCore;
+using QuestPDF.Fluent;
 using System.Threading.Tasks;
-using Teklif_Sepeti.Data; // Veritabaný context'i için
-using Teklif_Sepeti.Models; // Proposal ve ProductService modelleri için
-using Teklif_Sepeti.Documents; // ProposalDocument sýnýfý için
+using Teklif_Sepeti.Data;
+using Teklif_Sepeti.Models;
+using Teklif_Sepeti.Documents;
+using Microsoft.AspNetCore.Identity; 
+using Microsoft.AspNetCore.Authorization; 
 
 namespace Teklif_Sepeti.Pages
 {
+    [Authorize] //  Bu sayfayý sadece giriþ yapanlar görebilsin
     public class ProposalDetailsModel : PageModel
     {
         private readonly ApplicationDbContext _context;
+        private readonly UserManager<ApplicationUser> _userManager; //Kullanýcý yöneticisini ekle
 
-        public ProposalDetailsModel(ApplicationDbContext context)
+        // Constructor'a UserManager'ý da ekle
+        public ProposalDetailsModel(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
         {
             _context = context;
+            _userManager = userManager; //  UserManager'ý ata
         }
 
-        // Sayfada gösterilecek olan teklifi tutacak property
         public Proposal Proposal { get; set; }
 
-        // Sayfa ilk yüklendiðinde çalýþacak metot (GET isteði)
-        // Adres çubuðundan gelen 'id' parametresini alýr
         public async Task<IActionResult> OnGetAsync(int? id)
         {
             if (id == null)
             {
-                return NotFound(); // Eðer ID gelmezse 404 hatasý döndür
+                return NotFound();
             }
 
-            // Veritabanýndan ilgili teklifi bul
-            // Include(p => p.Items) ile teklife baðlý kalemleri de yükle
             Proposal = await _context.Proposals
-                                     .Include(p => p.Items) // Ýliþkili ProductService'leri de getir
-                                     .FirstOrDefaultAsync(p => p.Id == id); // ID'ye göre teklifi bul
+                                     .Include(p => p.Items)
+                                     .FirstOrDefaultAsync(p => p.Id == id);
 
             if (Proposal == null)
             {
-                return NotFound(); // Eðer o ID ile teklif bulunamazsa 404 hatasý döndür
+                return NotFound();
             }
 
-            return Page(); // Her þey yolundaysa, Proposal nesnesi dolu olarak sayfayý döndür
+            return Page();
         }
 
-        // PDF Ýndirme butonu týklandýðýnda çalýþacak metot (POST isteði)
-        // Formdan gönderilen 'id' parametresini alýr
+        // PDF Ýndirme butonu týklandýðýnda çalýþacak metot
         public async Task<IActionResult> OnPostDownloadPdfAsync(int id)
         {
-            // Güvenlik için teklifi veritabanýndan tekrar çek
+            // 1. Adým: Teklifi veritabanýndan çek (Kalemleriyle birlikte)
             var proposal = await _context.Proposals
-                                         .Include(p => p.Items) // Kalemleri de dahil et
+                                         .Include(p => p.Items)
                                          .FirstOrDefaultAsync(p => p.Id == id);
 
             if (proposal == null)
             {
-                return NotFound(); // Teklif bulunamazsa hata ver
+                return NotFound();
             }
 
-            // QuestPDF þablonumuzu (ProposalDocument) oluþtur ve teklif verisini içine ver
-            var document = new ProposalDocument(proposal);
+            //  O an giriþ yapmýþ olan kullanýcýyý bul
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                // Giriþ yapmamýþ biri bir þekilde buraya ulaþtýysa (çok zor)
+                return Challenge(); // Onu login sayfasýna yönlendir
+            }
 
-            // PDF'i hafýzada byte dizisi olarak oluþtur
+            // 2. Adým: PDF Þablonunu oluþtur
+            //  Constructor'a artýk HEM teklifi HEM de kullanýcýyý ver
+            var document = new ProposalDocument(proposal, user);
+
+            // 3. Adým: PDF'i hafýzada oluþtur
             byte[] pdfBytes = document.GeneratePdf();
 
-            // Oluþturulan PDF'i kullanýcýya dosya olarak indir
-            // File() metodu FileContentResult döndürür
-            // Parametreler: byte[] içerik, MIME tipi, dosya adý
+            // 4. Adým: Dosyayý kullanýcýya indir
             return File(pdfBytes, "application/pdf", $"Teklif-{proposal.ProposalNumber ?? proposal.Id.ToString()}.pdf");
         }
     }
