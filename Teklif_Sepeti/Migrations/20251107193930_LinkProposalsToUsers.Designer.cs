@@ -11,8 +11,8 @@ using Teklif_Sepeti.Data;
 namespace Teklif_Sepeti.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251104173131_AddCompanyFieldsToUser")]
-    partial class AddCompanyFieldsToUser
+    [Migration("20251107193930_LinkProposalsToUsers")]
+    partial class LinkProposalsToUsers
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -277,6 +277,10 @@ namespace Teklif_Sepeti.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("ApplicationUserId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("CustomerAddress")
                         .HasColumnType("TEXT");
 
@@ -299,9 +303,6 @@ namespace Teklif_Sepeti.Migrations
                     b.Property<string>("ProposalNumber")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("INTEGER");
-
                     b.Property<decimal>("TotalGrandTotal")
                         .HasColumnType("TEXT");
 
@@ -312,6 +313,8 @@ namespace Teklif_Sepeti.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ApplicationUserId");
 
                     b.ToTable("Proposals");
                 });
@@ -376,6 +379,22 @@ namespace Teklif_Sepeti.Migrations
                         .IsRequired();
 
                     b.Navigation("Proposal");
+                });
+
+            modelBuilder.Entity("Teklif_Sepeti.Models.Proposal", b =>
+                {
+                    b.HasOne("Teklif_Sepeti.Models.ApplicationUser", "ApplicationUser")
+                        .WithMany("Proposals")
+                        .HasForeignKey("ApplicationUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ApplicationUser");
+                });
+
+            modelBuilder.Entity("Teklif_Sepeti.Models.ApplicationUser", b =>
+                {
+                    b.Navigation("Proposals");
                 });
 
             modelBuilder.Entity("Teklif_Sepeti.Models.Proposal", b =>

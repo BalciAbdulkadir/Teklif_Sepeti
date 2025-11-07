@@ -1,27 +1,40 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore; // Bunu eklemen çok önemli
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Teklif_Sepeti.Data;
-using Teklif_Sepeti.Models;
+using Microsoft.AspNetCore.Identity; // Bunu ekliyoruz
+using Teklif_Sepeti.Models; // ApplicationUser için bunu ekliyoruz
+using System.Threading.Tasks; // Task için
+using Microsoft.AspNetCore.Authorization; // Bunu ekliyoruz
 
 namespace Teklif_Sepeti.Pages
 {
-    public class IndexModel(ApplicationDbContext context) : PageModel
+    [Authorize] // Bu sayfa sadece giriþ yapanlara
+    public class IndexModel : PageModel
     {
-        private readonly ApplicationDbContext _context = context;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        // CS8618: Null atanamaz özellik 'Proposals', oluþturucudan çýkýþ yaparken null olmayan bir deðer içermelidir.
-        public IList<Proposal> Proposals { get; set; } = new List<Proposal>();
-
-        // Sayfa yüklendiðinde bu metot otomatik çalýþýr
-        public async Task OnGetAsync()
+        public IndexModel(UserManager<ApplicationUser> userManager)
         {
-            // Veritabanýndaki Proposals tablosuna git,
-            // Hepsini (ToListAsync) al ve
-            // Proposals listemize doldur.
-            Proposals = await _context.Proposals.ToListAsync();
+            _userManager = userManager;
+        }
+
+        // HTML tarafýnda kullanmak için bir property
+        public ApplicationUser CurrentUser { get; set; }
+
+        public async Task<IActionResult> OnGetAsync()
+        {
+            // O an giriþ yapmýþ olan kullanýcýyý ID'sine göre bul
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                // Eðer bir sebepten kullanýcý bulunamazsa (normalde olmamalý)
+                // Hata yerine giriþ sayfasýna yönlendirelim
+                return Challenge();
+            }
+
+            // Bulduðumuz kullanýcýyý HTML'de kullanabilmek için property'mize ata
+            CurrentUser = user;
+            return Page();
         }
     }
 }

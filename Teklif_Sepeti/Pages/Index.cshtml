@@ -1,44 +1,63 @@
 ﻿@page
 @model Teklif_Sepeti.Pages.IndexModel
 @{
-    ViewData["Title"] = "Ana Sayfa - Kayıtlı Teklifler";
+    ViewData["Title"] = "Ana Sayfa";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="display-4">Kayıtlı Teklifler</h1>
-    <a asp-page="/CreateProposal" class="btn btn-primary btn-lg">+ Yeni Teklif Oluştur</a>
+<div class="mb-4">
+    <h1>Teklif Sepeti'ne Hoş Geldiniz!</h1>
+    <p class="lead">Hızlı ve kolayca profesyonel teklifler oluşturun.</p>
 </div>
 
-<div class="card shadow-sm">
-    <div class="card-body">
-        <table class="table table-hover align-middle">
-            <thead class="table-light">
-                <tr>
-                    <th>Teklif Numarası</th>
-                    <th>Müşteri Adı</th>
-                    <th>Düzenlenme Tarihi</th>
-                    <th>Genel Toplam</th>
-                    <th>Durum</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var proposal in Model.Proposals)
-                {
-                    <tr>
-                        <td>@proposal.ProposalNumber</td>
-                        <td>@proposal.CustomerName</td>
-                        <td>@proposal.IssueDate.ToShortDateString()</td>
-                        <td>@proposal.TotalGrandTotal.ToString("C", new System.Globalization.CultureInfo("tr-TR"))</td>
-                        <td>@proposal.Status</td>
-                        <td>
-                            <a asp-page="/ProposalDetails" asp-route-id="@proposal.Id" class="btn btn-sm btn-outline-primary">
-                                Detaylar
-                            </a>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+<div class="mb-4">
+    <a asp-page="/CreateProposal" class="btn btn-primary btn-lg">
+        <i class="bi bi-plus-circle"></i> Yeni Teklif Oluştur
+    </a>
+</div>
+
+<hr />
+
+<div class="row">
+    <div class="col-md-8">
+        <h4>Kayıtlı Şirket Bilgileriniz</h4>
+        <p>
+            Oluşturulacak PDF tekliflerde aşağıdaki bilgiler "Teklifi Veren" olarak kullanılacaktır.
+            Bu bilgileri <a asp-area="Identity" asp-page="/Account/Manage/Index">Profil Yönetimi</a> sayfanızdan güncelleyebilirsiniz.
+        </p>
+
+        @if (Model.CurrentUser != null)
+        {
+            <div class="card">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">
+                        <strong>Kullanıcı:</strong> @Model.CurrentUser.UserName
+                    </li>
+                    <li class="list-group-item">
+                        <strong>Şirket Unvanı:</strong> @(Model.CurrentUser.CompanyName ?? " (belirtilmemiş)")
+                    </li>
+                    <li class="list-group-item">
+                        <strong>Şirket Adresi:</strong> @(Model.CurrentUser.CompanyAddress ?? " (belirtilmemiş)")
+                    </li>
+                    <li class="list-group-item">
+                        <strong>Vergi Dairesi:</strong> @(Model.CurrentUser.CompanyTaxOffice ?? " (belirtilmemiş)")
+                    </li>
+                    <li class="list-group-item">
+                        <strong>Vergi Numarası:</strong> @(Model.CurrentUser.CompanyTaxNumber ?? " (belirtilmemiş)")
+                    </li>
+                    <li class="list-group-item">
+                        <strong>IBAN:</strong> @(Model.CurrentUser.CompanyIBAN ?? " (belirtilmemiş)")
+                    </li>
+                    <li class="list-group-item">
+                        <strong>Yetkili Adı:</strong> @(Model.CurrentUser.ContactFullName ?? " (belirtilmemiş)")
+                    </li>
+                </ul>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-warning">
+                Kullanıcı bilgileri yüklenemedi.
+            </div>
+        }
     </div>
 </div>

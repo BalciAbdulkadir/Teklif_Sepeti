@@ -9,16 +9,22 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
-using Teklif_Sepeti.Models;
+using Teklif_Sepeti.Models; // <-- BU SATIR ÇOK ÖNEMLİ
 
 namespace Teklif_Sepeti.Areas.Identity.Pages.Account
 {
     public class LogoutModel : PageModel
     {
+        // --- DEĞİŞİKLİK BURADA ---
         private readonly SignInManager<ApplicationUser> _signInManager;
+        // --- DEĞİŞİKLİK BİTTİ ---
         private readonly ILogger<LogoutModel> _logger;
 
-        public LogoutModel(SignInManager<ApplicationUser> signInManager, ILogger<LogoutModel> logger)
+        public LogoutModel(
+            // --- DEĞİŞİKLİK BURADA ---
+            SignInManager<ApplicationUser> signInManager,
+            // --- DEĞİŞİKLİK BİTTİ ---
+            ILogger<LogoutModel> logger)
         {
             _signInManager = signInManager;
             _logger = logger;
@@ -34,8 +40,6 @@ namespace Teklif_Sepeti.Areas.Identity.Pages.Account
             }
             else
             {
-                // This needs to be a redirect so that the browser performs a new
-                // request and the identity for the user gets updated.
                 return RedirectToPage();
             }
         }
