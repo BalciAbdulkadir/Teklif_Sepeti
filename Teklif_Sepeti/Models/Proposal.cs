@@ -32,8 +32,7 @@ namespace Teklif_Sepeti.Models
         [DataType(DataType.Date)]
         public DateTime ExpiryDate { get; set; }
 
-        // Teklifin durumu - iş akışını takip etmek için
-        public ProposalStatus Status { get; set; } = ProposalStatus.Draft;
+      
 
      [Display(Name = "Notlar")]
       public string? Notes { get; set; }

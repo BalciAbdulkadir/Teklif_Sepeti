@@ -1,11 +1,11 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore; // <-- DEĞİŞTİ
 using Microsoft.EntityFrameworkCore;
 using Teklif_Sepeti.Models;
 
-
 namespace Teklif_Sepeti.Data
 {
-    public class ApplicationDbContext: IdentityDbContext<ApplicationUser>
+
+    public class ApplicationDbContext : IdentityDbContext<ApplicationUser> // <-- DEĞİŞTİ
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
@@ -14,7 +14,5 @@ namespace Teklif_Sepeti.Data
 
         public DbSet<Proposal> Proposals { get; set; }
         public DbSet<ProductService> ProductServices { get; set; }
-
-       
     }
 }

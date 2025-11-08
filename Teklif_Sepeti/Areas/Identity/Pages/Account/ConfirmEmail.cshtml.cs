@@ -1,27 +1,23 @@
-﻿using System;
-using System.Linq;
-using System.Text;
+﻿using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
-using Teklif_Sepeti.Models; // <-- BU SATIR ÇOK ÖNEMLİ
+using Teklif_Sepeti.Models; // <-- EKLENDİ
 
 namespace Teklif_Sepeti.Areas.Identity.Pages.Account
 {
     [AllowAnonymous]
     public class ConfirmEmailModel : PageModel
     {
-        // --- DEĞİŞİKLİK BURADA ---
-        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager; // <-- DEĞİŞTİ
 
-        public ConfirmEmailModel(UserManager<ApplicationUser> userManager)
+        public ConfirmEmailModel(UserManager<ApplicationUser> userManager) // <-- DEĞİŞTİ
         {
             _userManager = userManager;
         }
-        // --- DEĞİŞİKLİK BİTTİ ---
 
         [TempData]
         public string StatusMessage { get; set; }
@@ -41,9 +37,7 @@ namespace Teklif_Sepeti.Areas.Identity.Pages.Account
 
             code = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(code));
             var result = await _userManager.ConfirmEmailAsync(user, code);
-
             StatusMessage = result.Succeeded ? "E-posta adresiniz başarıyla onaylandı." : "E-posta onaylanırken bir hata oluştu.";
-
             return Page();
         }
     }

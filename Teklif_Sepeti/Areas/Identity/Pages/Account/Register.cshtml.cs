@@ -1,6 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
-#nullable disable
+﻿#nullable disable
 
 using System;
 using System.Collections.Generic;
@@ -18,23 +16,23 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
-using Teklif_Sepeti.Models;
+using Teklif_Sepeti.Models; // <-- EKLENDİ
 
 namespace Teklif_Sepeti.Areas.Identity.Pages.Account
 {
     public class RegisterModel : PageModel
     {
-        private readonly SignInManager<ApplicationUser> _signInManager;
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly IUserStore<ApplicationUser> _userStore;
-        private readonly IUserEmailStore<ApplicationUser> _emailStore;
+        private readonly SignInManager<ApplicationUser> _signInManager; // <-- DEĞİŞTİ
+        private readonly UserManager<ApplicationUser> _userManager; // <-- DEĞİŞTİ
+        private readonly IUserStore<ApplicationUser> _userStore; // <-- DEĞİŞTİ
+        private readonly IUserEmailStore<ApplicationUser> _emailStore; // <-- DEĞİŞTİ
         private readonly ILogger<RegisterModel> _logger;
         private readonly IEmailSender _emailSender;
 
         public RegisterModel(
-            UserManager<ApplicationUser> userManager,
-            IUserStore<ApplicationUser> userStore,
-            SignInManager<ApplicationUser> signInManager,
+            UserManager<ApplicationUser> userManager, // <-- DEĞİŞTİ
+            IUserStore<ApplicationUser> userStore, // <-- DEĞİŞTİ
+            SignInManager<ApplicationUser> signInManager, // <-- DEĞİŞTİ
             ILogger<RegisterModel> logger,
             IEmailSender emailSender)
         {
@@ -46,36 +44,17 @@ namespace Teklif_Sepeti.Areas.Identity.Pages.Account
             _emailSender = emailSender;
         }
 
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
         [BindProperty]
         public InputModel Input { get; set; }
-
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
         public string ReturnUrl { get; set; }
-
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
         public IList<AuthenticationScheme> ExternalLogins { get; set; }
 
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
         public class InputModel
         {
             [Required(ErrorMessage = "E-posta alanı zorunludur.")]
-            [EmailAddress(ErrorMessage = "Geçerli bir e-posta adresi girmelisiniz.")]
+            [EmailAddress]
             [Display(Name = "E-posta")]
             public string Email { get; set; }
-
 
             [Required(ErrorMessage = "Şifre alanı zorunludur.")]
             [StringLength(100, ErrorMessage = "{0} en az {2} ve en fazla {1} karakter uzunluğunda olmalıdır.", MinimumLength = 6)]
@@ -83,13 +62,11 @@ namespace Teklif_Sepeti.Areas.Identity.Pages.Account
             [Display(Name = "Şifre")]
             public string Password { get; set; }
 
-
             [DataType(DataType.Password)]
             [Display(Name = "Şifreyi Onayla")]
             [Compare("Password", ErrorMessage = "Şifre ve şifre onayı eşleşmiyor.")]
             public string ConfirmPassword { get; set; }
         }
-
 
         public async Task OnGetAsync(string returnUrl = null)
         {
@@ -122,11 +99,14 @@ namespace Teklif_Sepeti.Areas.Identity.Pages.Account
                         values: new { area = "Identity", userId = userId, code = code, returnUrl = returnUrl },
                         protocol: Request.Scheme);
 
-                    await _emailSender.SendEmailAsync(Input.Email, "Confirm your email",
-                        $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+                    // E-POSTAYI GÖNDER
+                    await _emailSender.SendEmailAsync(Input.Email,
+                        "Teklif Sepeti - Hesabınızı Onaylayın",
+                        $"Lütfen hesabınızı onaylamak için <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>buraya tıklayın</a>.");
 
                     if (_userManager.Options.SignIn.RequireConfirmedAccount)
                     {
+                        // Artık 'true' olduğu için buraya girecek
                         return RedirectToPage("RegisterConfirmation", new { email = Input.Email, returnUrl = returnUrl });
                     }
                     else
@@ -140,8 +120,6 @@ namespace Teklif_Sepeti.Areas.Identity.Pages.Account
                     ModelState.AddModelError(string.Empty, error.Description);
                 }
             }
-
-            // If we got this far, something failed, redisplay form
             return Page();
         }
 
