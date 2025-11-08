@@ -5,10 +5,10 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Teklif_Sepeti.Migrations
 {
-    /// <inheritdoc />
-    public partial class InitialCleanSchema : Migration
+    
+    public partial class FinalSchemaWithDiscounts : Migration
     {
-        /// <inheritdoc />
+        
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
@@ -55,28 +55,6 @@ namespace Teklif_Sepeti.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_AspNetUsers", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Proposals",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    ProposalNumber = table.Column<string>(type: "TEXT", nullable: true),
-                    CustomerName = table.Column<string>(type: "TEXT", nullable: false),
-                    CustomerEmail = table.Column<string>(type: "TEXT", nullable: true),
-                    CustomerAddress = table.Column<string>(type: "TEXT", nullable: true),
-                    IssueDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    ExpiryDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    Notes = table.Column<string>(type: "TEXT", nullable: true),
-                    TotalSubtotal = table.Column<decimal>(type: "TEXT", nullable: false),
-                    TotalVATAmount = table.Column<decimal>(type: "TEXT", nullable: false),
-                    TotalGrandTotal = table.Column<decimal>(type: "TEXT", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Proposals", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -186,6 +164,39 @@ namespace Teklif_Sepeti.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Proposals",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    ProposalNumber = table.Column<string>(type: "TEXT", nullable: true),
+                    CustomerName = table.Column<string>(type: "TEXT", nullable: false),
+                    CustomerEmail = table.Column<string>(type: "TEXT", nullable: true),
+                    CustomerAddress = table.Column<string>(type: "TEXT", nullable: true),
+                    IssueDate = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    ExpiryDate = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    Notes = table.Column<string>(type: "TEXT", nullable: true),
+                    DiscountType = table.Column<int>(type: "INTEGER", nullable: false),
+                    DiscountValue = table.Column<decimal>(type: "TEXT", nullable: false),
+                    TotalSubtotal = table.Column<decimal>(type: "TEXT", nullable: false),
+                    TotalDiscountAmount = table.Column<decimal>(type: "TEXT", nullable: false),
+                    TotalNetTotal = table.Column<decimal>(type: "TEXT", nullable: false),
+                    TotalVATAmount = table.Column<decimal>(type: "TEXT", nullable: false),
+                    TotalGrandTotal = table.Column<decimal>(type: "TEXT", nullable: false),
+                    ApplicationUserId = table.Column<string>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Proposals", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Proposals_AspNetUsers_ApplicationUserId",
+                        column: x => x.ApplicationUserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "ProductServices",
                 columns: table => new
                 {
@@ -252,6 +263,11 @@ namespace Teklif_Sepeti.Migrations
                 name: "IX_ProductServices_ProposalId",
                 table: "ProductServices",
                 column: "ProposalId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Proposals_ApplicationUserId",
+                table: "Proposals",
+                column: "ApplicationUserId");
         }
 
         /// <inheritdoc />
@@ -279,10 +295,10 @@ namespace Teklif_Sepeti.Migrations
                 name: "AspNetRoles");
 
             migrationBuilder.DropTable(
-                name: "AspNetUsers");
+                name: "Proposals");
 
             migrationBuilder.DropTable(
-                name: "Proposals");
+                name: "AspNetUsers");
         }
     }
 }

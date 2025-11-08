@@ -3,53 +3,67 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Teklif_Sepeti.Models
 {
+    // Yüzde veya Sabit Tutar için bir enum oluşturduk
+    public enum DiscountType
+    {
+        [Display(Name = "Yüzde (%)")]
+        Percentage,
+        [Display(Name = "Sabit Tutar (₺)")]
+        FixedAmount
+    }
+
     public class Proposal
     {
-      public int Id { get; set; }
+        public int Id { get; set; }
 
- // Her teklifin benzersiz bir numarası olsun
+        // --- MÜŞTERİ VE TEKLİF BİLGİLERİ ---
         [Display(Name = "Teklif Numarası")]
         public string? ProposalNumber { get; set; }
 
-        // Müşteri bilgileri - bunlar PDF'te başlıkta görünecek
-      [Required(ErrorMessage = "Müşterinin adını girmelisin")]
-   [Display(Name = "Müşteri Adı/Şirketi")]
+        [Required(ErrorMessage = "Müşterinin adını girmelisin")]
+        [Display(Name = "Müşteri Adı/Şirketi")]
         public string CustomerName { get; set; }
 
-      [EmailAddress(ErrorMessage = "Geçerli bir e-posta adresi girmelisin")]
-        [Display(Name = "Müşteri E-postası")]
+        [Display(Name = "Müşteri E-Postası")]
+        [EmailAddress]
         public string? CustomerEmail { get; set; }
 
-      [Display(Name = "Müşteri Adresi")]
-   public string? CustomerAddress { get; set; }
+        [Display(Name = "Müşteri Adresi")]
+        public string? CustomerAddress { get; set; }
 
- // Teklif tarihleri - geçerlilik kontrolü için kullanacağım
         [Display(Name = "Düzenlenme Tarihi")]
         [DataType(DataType.Date)]
         public DateTime IssueDate { get; set; }
 
-   [Display(Name = "Geçerlilik Tarihi")]
+        [Display(Name = "Geçerlilik Tarihi")]
         [DataType(DataType.Date)]
         public DateTime ExpiryDate { get; set; }
 
-      
+        [Display(Name = "Notlar")]
+        public string? Notes { get; set; }
 
-     [Display(Name = "Notlar")]
-      public string? Notes { get; set; }
+        // --- İSKONTO ALANLARI ---
+        [Display(Name = "İskonto Tipi")]
+        public DiscountType DiscountType { get; set; } = DiscountType.Percentage;
 
-      // Hesaplanan toplamlar - bunları kalemlerden otomatik hesaplayacağım
-        public decimal TotalSubtotal { get; set; }
-    public decimal TotalVATAmount { get; set; }
-        public decimal TotalGrandTotal { get; set; }
+        [Display(Name = "İskonto Değeri")]
+        public decimal DiscountValue { get; set; } = 0;
 
-        // Teklif kalemleri - null kontrolü yapmamak için boş liste ile başlat
+        // --- HESAPLANMIŞ TOPLAMLAR ---
+        public decimal TotalSubtotal { get; set; } // Ara Toplam (İskontosuz)
+        public decimal TotalDiscountAmount { get; set; } // Hesaplanan İskonto Tutarı (BU EKSİKTİ)
+        public decimal TotalNetTotal { get; set; } // Net Toplam (Ara Toplam - İskonto) (BU EKSİKTİ)
+        public decimal TotalVATAmount { get; set; } // Toplam KDV
+        public decimal TotalGrandTotal { get; set; } // Genel Toplam (Net Toplam + KDV)
+
+
         public ICollection<ProductService> Items { get; set; } = new List<ProductService>();
 
         // Teklifi oluşturan kullanıcının bilgileri
         [Required]
- public string ApplicationUserId { get; set; }
-        
- [ForeignKey("ApplicationUserId")]
+        public string ApplicationUserId { get; set; }
+
+        [ForeignKey("ApplicationUserId")]
         public ApplicationUser ApplicationUser { get; set; }
     }
 }

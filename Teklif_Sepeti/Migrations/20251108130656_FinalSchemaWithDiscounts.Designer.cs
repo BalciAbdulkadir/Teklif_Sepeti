@@ -11,8 +11,8 @@ using Teklif_Sepeti.Data;
 namespace Teklif_Sepeti.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251107193930_LinkProposalsToUsers")]
-    partial class LinkProposalsToUsers
+    [Migration("20251108130656_FinalSchemaWithDiscounts")]
+    partial class FinalSchemaWithDiscounts
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -291,6 +291,12 @@ namespace Teklif_Sepeti.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("DiscountType")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("DiscountValue")
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime>("ExpiryDate")
                         .HasColumnType("TEXT");
 
@@ -303,7 +309,13 @@ namespace Teklif_Sepeti.Migrations
                     b.Property<string>("ProposalNumber")
                         .HasColumnType("TEXT");
 
+                    b.Property<decimal>("TotalDiscountAmount")
+                        .HasColumnType("TEXT");
+
                     b.Property<decimal>("TotalGrandTotal")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("TotalNetTotal")
                         .HasColumnType("TEXT");
 
                     b.Property<decimal>("TotalSubtotal")

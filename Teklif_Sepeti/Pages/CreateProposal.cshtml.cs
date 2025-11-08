@@ -10,13 +10,12 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace Teklif_Sepeti.Pages
 {
-    [Authorize] // Sadece giriþ yapanlar teklif oluþturabilsin
+    [Authorize]
     public class CreateProposalModel : PageModel
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
 
-        // Constructor güncellendi
         public CreateProposalModel(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
         {
             _context = context;
@@ -32,68 +31,81 @@ namespace Teklif_Sepeti.Pages
             {
                 IssueDate = System.DateTime.Now,
                 ExpiryDate = System.DateTime.Now.AddDays(15),
-                Items = new List<ProductService>()
+                Items = new List<ProductService>(),
+                DiscountValue = 0
             };
         }
 
         public async Task<IActionResult> OnPostAsync()
         {
-            // --- HATA DÜZELTMESÝ BURADA ---
-            // Model'e diyoruz ki, bu iki alaný formdan bekleme,
-            // bunlarý biz elle atayacaðýz, sen doðrulama dýþý býrak.
             ModelState.Remove("Proposal.ApplicationUserId");
             ModelState.Remove("Proposal.ApplicationUser");
-            // --- HATA DÜZELTMESÝ BÝTTÝ ---
 
             if (!ModelState.IsValid)
             {
-                // Artýk buraya (boþ bir müþteri adý yollanmadýkça) düþmemeli
                 return Page();
             }
 
-            // --- KULLANICIYI BUL VE TEKLÝFE ATA ---
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {
                 return Challenge();
             }
             Proposal.ApplicationUserId = user.Id;
-            // --- KULLANICI ATAMA BÝTTÝ ---
 
+            // --- HESAPLAMA MANTIÐI ---
 
-            // ...(Hesaplama kodlarý)...
             decimal totalSubtotal = 0;
             decimal totalVatAmount = 0;
 
+            // 1. Önce satýrlarý ve KDV'leri hesapla
             if (Proposal.Items != null && Proposal.Items.Any())
             {
                 foreach (var item in Proposal.Items)
                 {
                     var rowSubtotal = item.Quantity * item.UnitPrice;
                     var rowVat = rowSubtotal * (item.VATRate / 100);
-                    var rowTotal = rowSubtotal + rowVat;
 
                     item.CalculatedSubtotal = rowSubtotal;
                     item.CalculatedVAT = rowVat;
-                    item.CalculatedTotal = rowTotal;
+                    item.CalculatedTotal = rowSubtotal + rowVat;
 
                     totalSubtotal += rowSubtotal;
                     totalVatAmount += rowVat;
                 }
             }
 
+            // 2. Ýskontoyu hesapla
+            decimal totalDiscountAmount = 0;
+            if (Proposal.DiscountType == DiscountType.Percentage)
+            {
+                totalDiscountAmount = totalSubtotal * (Proposal.DiscountValue / 100);
+            }
+            else // FixedAmount
+            {
+                totalDiscountAmount = Proposal.DiscountValue;
+            }
+
+            // 3. Net ve Genel Toplamlarý hesapla
+            decimal totalNetTotal = totalSubtotal - totalDiscountAmount;
+            decimal totalGrandTotal = totalNetTotal + totalVatAmount;
+
+            // 4. Tüm hesaplanan deðerleri Proposal nesnesine ata
             Proposal.TotalSubtotal = totalSubtotal;
+            Proposal.TotalDiscountAmount = totalDiscountAmount;
+            Proposal.TotalNetTotal = totalNetTotal;
             Proposal.TotalVATAmount = totalVatAmount;
-            Proposal.TotalGrandTotal = totalSubtotal + totalVatAmount;
+            Proposal.TotalGrandTotal = totalGrandTotal;
+
+            // --- HESAPLAMA MANTIÐI BÝTTÝ ---
+
             Proposal.ProposalNumber = $"TKLF-{System.DateTime.Now:yyyyMMdd-HHmm}";
             Proposal.IssueDate = System.DateTime.Now;
 
-            // 6. DEPOYA KALDIR
             _context.Proposals.Add(Proposal);
             await _context.SaveChangesAsync();
 
-            // 7. MÝSAFÝRÝ UÐURLA
-            return RedirectToPage("/ProposalList"); // Liste sayfasýna yönlendirelim
+            return RedirectToPage("/ProposalList");
         }
     }
 }

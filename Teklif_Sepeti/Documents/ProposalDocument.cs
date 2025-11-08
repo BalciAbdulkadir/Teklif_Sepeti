@@ -1,176 +1,293 @@
-﻿using QuestPDF.Fluent;
+﻿using Microsoft.AspNetCore.Identity;
+using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
+using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using Teklif_Sepeti.Models;
 
 namespace Teklif_Sepeti.Documents
 {
-public class ProposalDocument : IDocument
+    public class ProposalDocument : IDocument
     {
-     // Teklif ve kullanıcı verilerini tutacak property'ler
-   public Proposal Proposal { get; }
- public ApplicationUser User { get; }
+        public Proposal Model { get; }
+        public ApplicationUser User { get; }
 
-    public ProposalDocument(Proposal proposal, ApplicationUser user)
+        public ProposalDocument(Proposal model, ApplicationUser user)
         {
-          Proposal = proposal;
- User = user;
+            Model = model;
+            User = user;
         }
 
         public DocumentMetadata GetMetadata() => DocumentMetadata.Default;
 
-        // PDF'in yapısını oluşturuyorum
         public void Compose(IDocumentContainer container)
         {
-            // Para birimini Türk Lirası yapıyorum
-        var culture = new CultureInfo("tr-TR");
-
-          container.Page(page =>
-     {
-     // A4 kağıt ayarları
-             page.Size(PageSizes.A4);
-         page.Margin(1.5f, Unit.Centimetre);
-         page.DefaultTextStyle(style => style.FontSize(10).FontFamily(Fonts.Arial));
-
- // Antet, içerik ve altbilgi
-    page.Header().Element(ComposeHeader);
-        page.Content().Element(ComposeContent);
-
-   // Sayfa numarası
-     page.Footer().AlignCenter().Text(text =>
+            container
+                .Page(page =>
                 {
-         text.CurrentPageNumber();
-        text.Span(" / ");
-  text.TotalPages();
-});
-            });
+                    page.MarginHorizontal(40);
+                    page.MarginVertical(30);
+
+                    page.Header().Element(ComposeHeader);
+                    page.Content().Element(ComposeContent);
+                    page.Footer().Element(ComposeFooter);
+                });
         }
 
-        // Antet kısmını oluşturuyorum
+        // --- HATA DÜZELTMESİ BURADA ---
+        // 'container' (Header) sadece tek bir çocuk alabilir.
+        // Bu yüzden 'Row' ve 'BorderBottom'u tek bir 'Column' içine sardık.
         void ComposeHeader(IContainer container)
-  {
-         container.Column(column =>
-            {
-                column.Item().Row(row =>
-         {
-        // Şirket bilgileri
-   row.RelativeItem().Column(col =>
         {
-   col.Item().Text(User.CompanyName ?? "Şirket Adı Girilmemiş").SemiBold().FontSize(14);
-          col.Item().Text(User.CompanyAddress ?? "Adres Girilmemiş");
-  col.Item().Text($"Vergi Dairesi: {User.CompanyTaxOffice} - VKN: {User.CompanyTaxNumber}");
-       col.Item().Text($"IBAN: {User.CompanyIBAN}");
-   });
-
-             // Teklif detayları
-      row.ConstantItem(150).Column(col =>
-       {
-         col.Item().Text($"Teklif No: {Proposal.ProposalNumber}").Bold();
-      col.Item().Text($"Tarih: {Proposal.IssueDate:dd.MM.yyyy}");
-      col.Item().Text($"Geçerlilik: {Proposal.ExpiryDate:dd.MM.yyyy}");
-     });
-     });
-
-           // Ayırıcı çizgi
-  column.Item().PaddingTop(0.5f, Unit.Centimetre).BorderBottom(1).BorderColor(Colors.Grey.Lighten1);
-         });
-        }
-
-  // Ana içeriği oluşturuyorum
-     void ComposeContent(IContainer container)
-        {
-      var culture = new CultureInfo("tr-TR");
-
-    container.PaddingTop(0.5f, Unit.Centimetre).Column(column =>
+            container.Column(col => // <-- YENİ EKLENEN ANA SÜTUN
             {
-             // Müşteri bilgilerini yerleştiriyorum
-      column.Item().Row(row =>
-          {
-         row.RelativeItem().Border(1).BorderColor(Colors.Grey.Lighten2).Padding(5).Column(col =>
-     {
- col.Item().Text("Müşteri Bilgileri").SemiBold().FontSize(12);
-          col.Item().PaddingTop(5).Text(Proposal.CustomerName).Bold();
-  col.Item().Text(Proposal.CustomerAddress);
-      col.Item().Text(Proposal.CustomerEmail);
- });
-      row.ConstantItem(50);
-row.RelativeItem();
-    });
+                // Sütunun 1. elemanı (Satır)
+                col.Item().Row(row =>
+                {
+                    // Sol Taraf: Teklifi Veren (Sizin Şirket Bilgileri)
+                    row.RelativeItem().Column(col =>
+                    {
+                        col.Item().Text(User.CompanyName ?? "Firma Adı")
+                            .Bold().FontSize(20).FontColor(Colors.Blue.Darken2);
 
-   // Teklif kalemlerini tabloya ekliyorum
-                column.Item().PaddingTop(1, Unit.Centimetre).Element(ComposeTable);
+                        col.Item().Text(User.CompanyAddress ?? "Adres Bilgisi Yok");
+                        col.Item().Text(User.Email);
+                        col.Item().Text(User.PhoneNumber ?? "");
+                    });
 
-      // Not ve toplam tutarları gösteriyorum
-   column.Item().PaddingTop(0.5f, Unit.Centimetre).Row(row =>
-    {
-           row.RelativeItem().Column(col =>
-   {
- col.Item().Text("Notlar").SemiBold().FontSize(12);
-          col.Item().PaddingTop(5).Text(Proposal.Notes ?? "Ek not bulunmamaktadır.");
-        });
+                    // Sağ Taraf: Teklif Başlığı
+                    row.RelativeItem().Column(col =>
+                    {
+                        col.Item().AlignRight().Text("Doğrudan Alım Fiyat Teklifi")
+                            .Bold().FontSize(22).FontColor(Colors.Grey.Darken1);
 
-              // Toplam tutarlar
-row.ConstantItem(150).Column(col =>
-    {
-               col.Item().AlignRight().Text("Ara Toplam: " + Proposal.TotalSubtotal.ToString("C", culture));
-     col.Item().AlignRight().Text("Toplam KDV: " + Proposal.TotalVATAmount.ToString("C", culture));
-  col.Item().BorderTop(1).BorderColor(Colors.Grey.Lighten1).PaddingTop(5).AlignRight().Text(text =>
-      {
-       text.Span("GENEL TOPLAM: ").SemiBold();
-         text.Span(Proposal.TotalGrandTotal.ToString("C", culture)).Bold().FontSize(12);
-     });
-   });
-     });
+                        col.Item().AlignRight().Text(Model.ProposalNumber ?? $"#{Model.Id}")
+                            .SemiBold().FontSize(14);
+                        col.Item().AlignRight().Text($"Tarih: {Model.IssueDate:d}");
+                        col.Item().AlignRight().Text($"Geçerlilik: {Model.ExpiryDate:d}");
+                    });
+                });
 
-            // İmza alanı
-             column.Item().PaddingTop(2, Unit.Centimetre).Row(row =>
-          {
-             row.RelativeItem().Column(col => {
-         col.Item().Text("Teklifi Hazırlayan");
-  col.Item().Text(User.ContactFullName ?? "[Ad Soyad Girilmemiş]").Bold();
-              col.Item().Text(User.ContactTitle ?? "[Unvan Girilmemiş]");
-   });
-       row.RelativeItem();
-           row.RelativeItem();
+                // Sütunun 2. elemanı (Alt Çizgi)
+                col.Item().PaddingTop(10).BorderBottom(1).BorderColor(Colors.Grey.Lighten2);
             });
-      });
+        }
+        // --- HATA DÜZELTMESİ BİTTİ ---
+
+        void ComposeContent(IContainer container)
+        {
+            container.PaddingVertical(20).Column(col =>
+            {
+                // Müşteri Bilgileri
+                col.Item().Element(ComposeCustomerInfo);
+
+                // Mektup Metni
+                col.Item().PaddingTop(25).Column(introCol =>
+                {
+                    introCol.Item().Text($"Sayın {Model.CustomerName},")
+                        .SemiBold().FontSize(14);
+
+                    introCol.Item().PaddingTop(10).Text(
+                        $"{User.CompanyName ?? "Firmamız"} tarafından {Model.CustomerName} kurumuna/şahsına doğrudan temin fiyat teklifi mektubudur. " +
+                        "Aşağıda adı geçen ürünler/hizmetler için KDV dahil fiyatlarımız düzenlenmiştir."
+                    ).FontSize(10);
+
+                    // Şartlı İskonto Metni
+                    if (Model.DiscountValue > 0)
+                    {
+                        string discountText = "";
+                        if (Model.DiscountType == DiscountType.Percentage)
+                        {
+                            discountText = $"% {Model.DiscountValue}";
+                        }
+                        else
+                        {
+                            discountText = $"{Model.TotalDiscountAmount:C2}";
+                        }
+
+                        introCol.Item().PaddingTop(5).Text(
+                            $"(Ara toplam üzerinden {discountText} iskonto uygulanmıştır.)"
+                        ).Italic().FontSize(10);
+                    }
+                });
+
+                // Ürün/Hizmet Tablosu
+                col.Item().PaddingTop(25).Element(ComposeTable);
+
+                // Toplamlar Bölümü
+                col.Item().AlignRight().Element(ComposeTotals);
+
+                // Notlar Bölümü
+                if (!string.IsNullOrWhiteSpace(Model.Notes))
+                    col.Item().PaddingTop(25).Element(ComposeNotes);
+
+                // İmza Bölümü
+                col.Item().PaddingTop(40).Element(ComposeSignature);
+            });
         }
 
-        // Teklif kalemlerinin tablosunu oluşturuyorum
+        // MÜŞTERİ BİLGİLERİ (KİME)
+        void ComposeCustomerInfo(IContainer container)
+        {
+            container.ShowEntire().Column(col =>
+            {
+                col.Item().Text("TEKLİF ALAN (MÜŞTERİ)")
+                    .SemiBold().FontSize(10).FontColor(Colors.Grey.Darken1);
+
+                col.Item().Text(Model.CustomerName).Bold();
+                col.Item().Text(Model.CustomerAddress);
+                col.Item().Text(Model.CustomerEmail);
+            });
+        }
+
+        // ÜRÜN TABLOSU
         void ComposeTable(IContainer container)
         {
-  var culture = new CultureInfo("tr-TR");
-
             container.Table(table =>
             {
-       // Sütun genişliklerini ayarlıyorum
-         table.ColumnsDefinition(columns =>
-   {
-            columns.RelativeColumn(5);  // Açıklama
-   columns.RelativeColumn(1);  // Miktar
-         columns.RelativeColumn(2);  // Fiyat
-                  columns.RelativeColumn(2);  // Toplam
-       });
-
-                // Tablo başlıklarını oluşturuyorum
-       table.Header(header =>
+                table.ColumnsDefinition(columns =>
                 {
-  header.Cell().Background(Colors.Grey.Lighten3).Padding(3).Text("Açıklama").SemiBold();
-          header.Cell().Background(Colors.Grey.Lighten3).Padding(3).AlignCenter().Text("Miktar").SemiBold();
-             header.Cell().Background(Colors.Grey.Lighten3).Padding(3).AlignRight().Text("Birim Fiyat").SemiBold();
-          header.Cell().Background(Colors.Grey.Lighten3).Padding(3).AlignRight().Text("Toplam").SemiBold();
-        });
+                    columns.RelativeColumn(5); // Açıklama
+                    columns.ConstantColumn(50); // Miktar
+                    columns.ConstantColumn(80); // Birim Fiyat
+                    columns.ConstantColumn(50); // KDV
+                    columns.ConstantColumn(90); // Ara Toplam
+                });
 
-   // Teklif kalemlerini tabloya ekliyorum
-    foreach (var item in Proposal.Items)
-    {
-        table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(3).Text(item.Name);
-        table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(3).AlignCenter().Text(item.Quantity.ToString());
-         table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(3).AlignRight().Text(item.UnitPrice.ToString("C", culture));
-          table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(3).AlignRight().Text(item.CalculatedSubtotal.ToString("C", culture));
-       }
-     });
-  }
+                // Başlık
+                table.Header(header =>
+                {
+                    header.Cell().Background(Colors.Grey.Lighten3).Padding(5).Text("Açıklama");
+                    header.Cell().Background(Colors.Grey.Lighten3).Padding(5).AlignCenter().Text("Miktar");
+                    header.Cell().Background(Colors.Grey.Lighten3).Padding(5).AlignRight().Text("Birim Fiyat");
+                    header.Cell().Background(Colors.Grey.Lighten3).Padding(5).AlignCenter().Text("KDV");
+                    header.Cell().Background(Colors.Grey.Lighten3).Padding(5).AlignRight().Text("Satır Toplamı");
+                });
+
+                // Satırlar
+                foreach (var item in Model.Items)
+                {
+                    table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(5)
+                        .Text(item.Name);
+
+                    table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(5)
+                        .AlignCenter().Text(item.Quantity);
+
+                    table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(5)
+                        .AlignRight().Text($"{item.UnitPrice:C}");
+
+                    table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(5)
+                        .AlignCenter().Text($"%{item.VATRate}");
+
+                    table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(5)
+                        .AlignRight().Text($"{item.CalculatedSubtotal:C}");
+                }
+            });
+        }
+
+        // GENEL TOPLAMLAR BÖLÜMÜ
+        void ComposeTotals(IContainer container)
+        {
+            var culture = new CultureInfo("tr-TR");
+
+            container.Width(280).Column(col =>
+            {
+                // Ara Toplam
+                col.Item().Row(row =>
+                {
+                    row.RelativeItem().Text("Ara Toplam");
+                    row.ConstantItem(100).AlignRight().Text($"{Model.TotalSubtotal:C}");
+                });
+
+                // İskonto (Sadece varsa göster)
+                if (Model.TotalDiscountAmount > 0)
+                {
+                    col.Item().Row(row =>
+                    {
+                        row.RelativeItem().Text("İskonto").FontColor(Colors.Red.Medium);
+                        row.ConstantItem(100).AlignRight().Text($"-{Model.TotalDiscountAmount:C}").FontColor(Colors.Red.Medium);
+                    });
+
+                    col.Item().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Row(row =>
+                    {
+                        row.RelativeItem().Text("Net Toplam").Bold();
+                        row.ConstantItem(100).AlignRight().Text($"{Model.TotalNetTotal:C}").Bold();
+                    });
+                }
+
+                // KDV
+                col.Item().PaddingTop(5).Row(row =>
+                {
+                    row.RelativeItem().Text("Toplam KDV");
+                    row.ConstantItem(100).AlignRight().Text($"{Model.TotalVATAmount:C}");
+                });
+
+                // Genel Toplam
+                col.Item().PaddingTop(5).BorderTop(2).BorderColor(Colors.Black).Row(row =>
+                {
+                    row.RelativeItem().Text("Genel Toplam").Bold().FontSize(14);
+                    row.ConstantItem(100).AlignRight().Text($"{Model.TotalGrandTotal:C}").Bold().FontSize(14);
+                });
+            });
+        }
+
+        // NOTLAR BÖLÜMÜ
+        void ComposeNotes(IContainer container)
+        {
+            container.Background(Colors.Grey.Lighten4).Padding(10).Column(col =>
+            {
+                col.Item().Text("Ek Notlar ve Şartlar").SemiBold();
+                col.Item().Text(Model.Notes);
+            });
+        }
+
+        // İMZA BÖLÜMÜ
+        void ComposeSignature(IContainer container)
+        {
+            container.Row(row =>
+            {
+                // Banka Bilgileri (Varsa)
+                if (!string.IsNullOrWhiteSpace(User.CompanyIBAN))
+                {
+                    row.RelativeItem().Column(col =>
+                    {
+                        col.Item().Text("Banka Bilgileri").SemiBold();
+                        col.Item().Text(User.CompanyName);
+                        col.Item().Text($"IBAN: {User.CompanyIBAN}");
+                    });
+                }
+                else
+                {
+                    row.RelativeItem(); // Boşluk
+                }
+
+                // İmza Alanı (Yetkili)
+                row.RelativeItem().Column(col =>
+                {
+                    col.Item().AlignCenter().Text("Saygılarımızla,");
+                    col.Item().PaddingTop(15).AlignCenter().Text(User.CompanyName ?? "Firma Kaşesi");
+                    col.Item().PaddingTop(25).AlignCenter().Text("_________________________");
+                    col.Item().AlignCenter().Text(User.ContactFullName ?? "Yetkili Adı Soyadı");
+                    col.Item().AlignCenter().Text(User.ContactTitle ?? "Yetkili Unvanı");
+                });
+            });
+        }
+
+        // FOOTER (Alt Bilgi)
+        void ComposeFooter(IContainer container)
+        {
+            container.BorderTop(1).BorderColor(Colors.Grey.Lighten2).AlignCenter().Row(row =>
+            {
+                row.RelativeItem().Text(User.CompanyName ?? "Firma");
+                row.RelativeItem().AlignRight().Text(text =>
+                {
+                    text.CurrentPageNumber();
+                    text.Span(" / ");
+                    text.TotalPages();
+                });
+            });
+        }
     }
 }

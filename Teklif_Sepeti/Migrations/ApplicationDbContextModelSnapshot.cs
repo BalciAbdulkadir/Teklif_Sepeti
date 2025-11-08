@@ -288,6 +288,12 @@ namespace Teklif_Sepeti.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("DiscountType")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("DiscountValue")
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime>("ExpiryDate")
                         .HasColumnType("TEXT");
 
@@ -300,7 +306,13 @@ namespace Teklif_Sepeti.Migrations
                     b.Property<string>("ProposalNumber")
                         .HasColumnType("TEXT");
 
+                    b.Property<decimal>("TotalDiscountAmount")
+                        .HasColumnType("TEXT");
+
                     b.Property<decimal>("TotalGrandTotal")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("TotalNetTotal")
                         .HasColumnType("TEXT");
 
                     b.Property<decimal>("TotalSubtotal")
