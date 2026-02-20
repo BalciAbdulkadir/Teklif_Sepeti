@@ -53,3 +53,7 @@ Proje şu anda yukarıda listelenen MVP özelliklerini içeren, çalışır duru
 4.  Veritabanını oluşturun/güncelleyin: `dotnet ef database update`
 5.  Uygulamayı çalıştırın: `dotnet run`
 6.  Tarayıcınızda açılan adrese gidin (genellikle `https://localhost:XXXX`).
+
+## 📜 License
+
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
